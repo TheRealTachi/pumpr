@@ -30,9 +30,8 @@ export default function LandingPage() {
             <span className="tone-a">WHERE HOLDERS</span>{" "}
             <span className="tone-b">WIN</span>
           </h1>
-          <p className="mx-auto mt-6 max-w-xl text-sm text-[color:var(--muted)] sm:text-base">
-            every token launched on pumpr streams creator fees back to stakers
-            forever
+          <p className="heavy mx-auto mt-6 whitespace-nowrap text-[11px] text-[color:var(--muted)] sm:text-sm md:text-base">
+            EVERY TOKEN LAUNCHED ON PUMPR STREAMS CREATOR FEES BACK TO STAKERS FOREVER
           </p>
           <div className="mt-16">
             <FeaturedCarousel />
