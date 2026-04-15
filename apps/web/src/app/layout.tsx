@@ -21,9 +21,10 @@ const mono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "pumpr — where holders win",
+  title: "pumpr",
   description:
     "pump.fun launchpad with Proof-of-Belief staking. Every token streams creator fees to its stakers.",
+  icons: { icon: "/pumpr.png", apple: "/pumpr.png" },
 };
 
 export default function RootLayout({
