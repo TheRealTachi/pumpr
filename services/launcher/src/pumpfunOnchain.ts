@@ -28,6 +28,24 @@ export function bondingCurvePda(mint: PublicKey): PublicKey {
   )[0];
 }
 
+// Creator vault PDA — where unclaimed pump.fun creator fees accumulate.
+// Seeds: ["creator-vault", creator_pubkey].
+export function creatorVaultPda(creator: PublicKey): PublicKey {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from("creator-vault"), creator.toBuffer()],
+    PUMP_FUN_PROGRAM_ID,
+  )[0];
+}
+
+export async function fetchCreatorVaultLamports(
+  connection: Connection,
+  creator: PublicKey,
+): Promise<bigint> {
+  const pda = creatorVaultPda(creator);
+  const bal = await connection.getBalance(pda).catch(() => 0);
+  return BigInt(bal);
+}
+
 export async function fetchBondingCurve(
   connection: Connection,
   mint: PublicKey,

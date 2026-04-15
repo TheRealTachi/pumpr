@@ -60,6 +60,11 @@ export function openDb(dbPath: string): Database.Database {
     ensureColumn("pool_stats", "holders", "INTEGER NOT NULL DEFAULT 0");
     ensureColumn("pool_stats", "vol_24h_sol", "REAL NOT NULL DEFAULT 0");
     ensureColumn("pool_stats", "tx_count_24h", "INTEGER NOT NULL DEFAULT 0");
+    ensureColumn(
+      "pool_stats",
+      "creator_unclaimed_lamports",
+      "TEXT NOT NULL DEFAULT '0'",
+    );
   };
   db.exec(`
     CREATE TABLE IF NOT EXISTS launches (

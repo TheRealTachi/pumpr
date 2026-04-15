@@ -132,9 +132,15 @@ function MiniCard({
         </div>
       </div>
 
-      {/* centerpiece — if featured, show large glyph; otherwise compact */}
-      <div className={`mt-3 ${featured ? "h-28" : "h-16"}`}>
-        <GlowVisual featured={featured} symbol={token.symbol} />
+      {/* centerpiece — token image cropped square, fallback to glow glyph */}
+      <div
+        className={`relative mt-3 w-full overflow-hidden rounded-xl ${featured ? "aspect-square" : "h-20"}`}
+      >
+        <TokenCenter
+          src={token.imageUrl}
+          symbol={token.symbol}
+          featured={featured}
+        />
       </div>
 
       {/* ticker */}
@@ -193,18 +199,34 @@ function Avatar({ src, symbol }: { src: string | null; symbol: string }) {
   );
 }
 
-/* A gold/green gradient glyph for the featured card centerpiece — abstract
-   replacement for printr's prayer-hands illustration. */
-function GlowVisual({
-  featured,
+/* Centerpiece: use the token's uploaded image as a square cover. Falls back
+   to a gold/green glow glyph when no image is available. */
+function TokenCenter({
+  src,
   symbol,
+  featured,
 }: {
-  featured?: boolean;
+  src: string | null;
   symbol: string;
+  featured?: boolean;
 }) {
+  if (src) {
+    const url = src.startsWith("http") ? src : `${LAUNCHER_API}${src}`;
+    return (
+      <>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={url}
+          alt={symbol}
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+        {/* subtle inner vignette so text below stays readable */}
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+      </>
+    );
+  }
   return (
     <div className="relative h-full w-full overflow-hidden rounded-xl bg-gradient-to-b from-black/50 to-transparent">
-      {/* soft gold/green radial */}
       <div
         aria-hidden
         className="absolute left-1/2 top-1/2 h-32 w-32 -translate-x-1/2 -translate-y-1/2 rounded-full pulse-glow"

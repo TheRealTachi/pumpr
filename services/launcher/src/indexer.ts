@@ -1,7 +1,10 @@
 import { Connection, PublicKey } from "@solana/web3.js";
 import { getMint } from "@solana/spl-token";
 import type Database from "better-sqlite3";
-import { fetchBondingCurve } from "./pumpfunOnchain";
+import {
+  fetchBondingCurve,
+  fetchCreatorVaultLamports,
+} from "./pumpfunOnchain";
 import { getMintTokenProgram } from "./tokenProgram";
 
 // Pool stats indexer. For every launched token we:
@@ -51,28 +54,40 @@ export function startIndexer(cfg: IndexerConfig): () => void {
             cfg.connection,
             mintPk,
           ).catch(() => null);
-          const [mintInfo, bonding, stakeSum, largest] = await Promise.all([
-            tokenProgram
-              ? getMint(
-                  cfg.connection,
-                  mintPk,
-                  undefined,
-                  tokenProgram,
-                ).catch(() => null)
-              : null,
-            fetchBondingCurve(cfg.connection, mintPk).catch(() => null),
-            Promise.resolve(
-              cfg.db
-                .prepare(
-                  `SELECT COALESCE(SUM(CAST(amount AS INTEGER)),0) AS total
-                   FROM stake_deposits WHERE mint = ? AND returned_at IS NULL`,
-                )
-                .get(r.mint) as { total: number },
-            ),
-            cfg.connection
-              .getTokenLargestAccounts(mintPk)
-              .catch(() => ({ value: [] })),
-          ]);
+          const devWallet = cfg.db
+            .prepare(
+              `SELECT dev_wallet_pubkey FROM launches WHERE mint_pubkey = ?`,
+            )
+            .get(r.mint) as { dev_wallet_pubkey: string } | undefined;
+          const [mintInfo, bonding, stakeSum, largest, unclaimedLamports] =
+            await Promise.all([
+              tokenProgram
+                ? getMint(
+                    cfg.connection,
+                    mintPk,
+                    undefined,
+                    tokenProgram,
+                  ).catch(() => null)
+                : null,
+              fetchBondingCurve(cfg.connection, mintPk).catch(() => null),
+              Promise.resolve(
+                cfg.db
+                  .prepare(
+                    `SELECT COALESCE(SUM(CAST(amount AS INTEGER)),0) AS total
+                     FROM stake_deposits WHERE mint = ? AND returned_at IS NULL`,
+                  )
+                  .get(r.mint) as { total: number },
+              ),
+              cfg.connection
+                .getTokenLargestAccounts(mintPk)
+                .catch(() => ({ value: [] })),
+              devWallet
+                ? fetchCreatorVaultLamports(
+                    cfg.connection,
+                    new PublicKey(devWallet.dev_wallet_pubkey),
+                  ).catch(() => 0n)
+                : Promise.resolve(0n),
+            ]);
           const supply = mintInfo?.supply ?? 0n;
           const staked = BigInt(stakeSum?.total ?? 0);
           const stakePct =
@@ -91,6 +106,11 @@ export function startIndexer(cfg: IndexerConfig): () => void {
             holders: largest.value.length,
             updated_at: Date.now(),
           });
+          cfg.db
+            .prepare(
+              `UPDATE pool_stats SET creator_unclaimed_lamports = ? WHERE mint = ?`,
+            )
+            .run(unclaimedLamports.toString(), r.mint);
           if (bonding?.priceSolPerToken) {
             cfg.db
               .prepare(
