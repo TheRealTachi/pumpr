@@ -1,0 +1,25 @@
+{
+  "name": "pumprr",
+  "private": true,
+  "workspaces": ["services/*", "packages/*"],
+  "scripts": {
+    "build": "anchor build",
+    "test": "anchor test",
+    "lint": "prettier --check 'tests/**/*.ts' 'services/**/*.ts'"
+  },
+  "devDependencies": {
+    "@coral-xyz/anchor": "^0.31.1",
+    "@solana/spl-token": "^0.4.8",
+    "@solana/web3.js": "^1.95.0",
+    "@types/bn.js": "^5.1.5",
+    "@types/chai": "^4.3.16",
+    "@types/mocha": "^10.0.7",
+    "@types/node": "^22.0.0",
+    "chai": "^4.5.0",
+    "mocha": "^10.7.0",
+    "prettier": "^3.3.0",
+    "ts-mocha": "^10.0.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.0"
+  }
+}

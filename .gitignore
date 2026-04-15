@@ -1,0 +1,15 @@
+node_modules/
+dist/
+.next/
+.turbo/
+out/
+target/
+.anchor/
+test-ledger/
+.DS_Store
+*.log
+.env
+.env.*
+!.env.example
+services/*/data/
+apps/web/public/background.mp4
