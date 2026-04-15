@@ -118,6 +118,17 @@ async function distributeForLaunch(
   const available = bal - cfg.gasReserveLamports;
   if (available < 10_000n) return; // skip dust windows
 
+  // Track claimed-fee total on the pool's stats row (for UI display).
+  if (l.mint_pubkey) {
+    cfg.db
+      .prepare(
+        `UPDATE pool_stats SET lifetime_rewards = CAST(
+           (CAST(COALESCE(lifetime_rewards,'0') AS INTEGER) + ?) AS TEXT
+         ) WHERE mint = ?`,
+      )
+      .run(Number(available), l.mint_pubkey);
+  }
+
   const protocolCut = (available * PROTOCOL_FEE_BPS) / BPS;
   const stakerCut = available - protocolCut;
 
