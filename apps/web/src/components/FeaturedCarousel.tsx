@@ -12,6 +12,7 @@ interface Token {
   stakePct: number;
   lifetimeRewards: string;
   totalStaked: string;
+  marketCapSol?: number;
 }
 
 const PLACEHOLDERS: Token[] = [
@@ -50,15 +51,24 @@ export function FeaturedCarousel() {
   const [idx, setIdx] = useState(0);
 
   useEffect(() => {
-    fetch(`${LAUNCHER_API}/api/launches?status=launched&limit=20`)
-      .then((r) => (r.ok ? r.json() : { items: [] }))
-      .then((d) => {
-        if (d.items && d.items.length >= 3) {
-          setRows(d.items.slice(0, 20));
-          setRealData(true);
-        }
-      })
-      .catch(() => {});
+    const load = () =>
+      fetch(`${LAUNCHER_API}/api/launches?status=launched&limit=50`)
+        .then((r) => (r.ok ? r.json() : { items: [] }))
+        .then((d) => {
+          if (d.items && d.items.length >= 3) {
+            // Show the top tokens by market cap in the carousel
+            const sorted = [...d.items].sort(
+              (a: Token, b: Token) =>
+                (b.marketCapSol ?? 0) - (a.marketCapSol ?? 0),
+            );
+            setRows(sorted.slice(0, 10));
+            setRealData(true);
+          }
+        })
+        .catch(() => {});
+    load();
+    const id = setInterval(load, 30_000);
+    return () => clearInterval(id);
   }, []);
 
   useEffect(() => {
