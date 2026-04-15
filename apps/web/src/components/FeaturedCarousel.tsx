@@ -55,15 +55,18 @@ export function FeaturedCarousel() {
       fetch(`${LAUNCHER_API}/api/launches?status=launched&limit=50`)
         .then((r) => (r.ok ? r.json() : { items: [] }))
         .then((d) => {
-          if (d.items && d.items.length >= 3) {
-            // Show the top tokens by market cap in the carousel
-            const sorted = [...d.items].sort(
-              (a: Token, b: Token) =>
-                (b.marketCapSol ?? 0) - (a.marketCapSol ?? 0),
-            );
-            setRows(sorted.slice(0, 10));
-            setRealData(true);
-          }
+          const items: Token[] = d.items ?? [];
+          if (items.length === 0) return; // keep placeholders
+          const sorted = [...items].sort(
+            (a, b) => (b.marketCapSol ?? 0) - (a.marketCapSol ?? 0),
+          );
+          // If fewer than 3, loop to fill out the carousel visually
+          const filled: Token[] =
+            sorted.length >= 3
+              ? sorted.slice(0, 10)
+              : [...sorted, ...sorted, ...sorted].slice(0, 3);
+          setRows(filled);
+          setRealData(true);
         })
         .catch(() => {});
     load();
