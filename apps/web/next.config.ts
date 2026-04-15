@@ -1,7 +1,14 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  output: "standalone",
+  images: {
+    remotePatterns: [
+      { protocol: "https", hostname: "gateway.pinata.cloud" },
+      { protocol: "https", hostname: "ipfs.io" },
+      { protocol: "https", hostname: "**.pump.fun" },
+    ],
+  },
 };
 
 export default nextConfig;
