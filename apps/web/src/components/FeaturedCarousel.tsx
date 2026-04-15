@@ -89,7 +89,7 @@ export function FeaturedCarousel() {
   const right = rows[(idx + 1) % rows.length];
 
   return (
-    <div className="mx-auto grid max-w-5xl grid-cols-[1fr_1.15fr_1fr] items-center gap-0 px-4">
+    <div className="mx-auto grid max-w-3xl grid-cols-[1fr_1.1fr_1fr] items-center gap-0 px-4">
       <div className="tilt-l">
         <MiniCard token={left} disabled={!realData} />
       </div>
@@ -132,10 +132,8 @@ function MiniCard({
         </div>
       </div>
 
-      {/* centerpiece — token image cropped square, fallback to glow glyph */}
-      <div
-        className={`relative mt-3 w-full overflow-hidden rounded-xl ${featured ? "aspect-square" : "h-20"}`}
-      >
+      {/* centerpiece — token image cropped square */}
+      <div className="relative mt-2 aspect-square w-full overflow-hidden rounded-xl">
         <TokenCenter
           src={token.imageUrl}
           symbol={token.symbol}
