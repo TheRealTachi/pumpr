@@ -226,29 +226,17 @@ function TokenCenter({
     );
   }
   return (
-    <div className="relative h-full w-full overflow-hidden rounded-xl bg-gradient-to-b from-black/50 to-transparent">
+    <div className="relative h-full w-full overflow-hidden rounded-xl bg-gradient-to-br from-[color:var(--green)]/15 via-black/40 to-[color:var(--green-dim)]/10">
       <div
         aria-hidden
         className="absolute left-1/2 top-1/2 h-32 w-32 -translate-x-1/2 -translate-y-1/2 rounded-full pulse-glow"
         style={{
           background: featured
-            ? "radial-gradient(circle, rgba(255,208,105,0.7), rgba(61, 218, 78,0.4) 50%, transparent 70%)"
-            : "radial-gradient(circle, rgba(61, 218, 78,0.35), transparent 70%)",
-          filter: "blur(12px)",
+            ? "radial-gradient(circle, rgba(255,208,105,0.5), rgba(61,218,78,0.35) 50%, transparent 70%)"
+            : "radial-gradient(circle, rgba(61,218,78,0.3), transparent 70%)",
+          filter: "blur(18px)",
         }}
       />
-      <div className="absolute inset-0 grid place-items-center">
-        <div
-          className={`font-bold tracking-tight ${featured ? "text-4xl" : "text-xl"} text-white/90`}
-          style={{
-            textShadow: featured
-              ? "0 0 30px rgba(61, 218, 78,0.8)"
-              : "0 0 12px rgba(61, 218, 78,0.4)",
-          }}
-        >
-          {symbol.slice(0, 4).toUpperCase()}
-        </div>
-      </div>
     </div>
   );
 }
