@@ -17,16 +17,16 @@ interface Row {
   mintSupply: string;
   createdAt: number;
   launchedAt: number | null;
-  // optional from real trade indexer
-  mcUsd?: number;
-  vol24hUsd?: number;
+  marketCapSol?: number;
+  priceSol?: number;
+  vol24hSol?: number;
+  txCount24h?: number;
+  holders?: number;
+  bondingProgress?: number;
+  // optional once price history is aggregated across larger windows
   priceChange5m?: number;
   priceChange1h?: number;
-  priceChange6h?: number;
   priceChange24h?: number;
-  holders?: number;
-  txCount?: number;
-  bondingProgress?: number;
 }
 
 type Sort = "new" | "mcap" | "vol" | "stake" | "fees";
@@ -40,6 +40,7 @@ export function TokenTable() {
   const [sort, setSort] = useState<Sort>("new");
   const [filter, setFilter] = useState<Filter>("all");
   const [q, setQ] = useState("");
+  const [solUsd, setSolUsd] = useState(0);
 
   useEffect(() => {
     const load = () =>
@@ -53,8 +54,15 @@ export function TokenTable() {
     return () => clearInterval(id);
   }, []);
 
+  useEffect(() => {
+    fetch(`${LAUNCHER_API}/api/sol-usd`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => d?.price && setSolUsd(d.price))
+      .catch(() => {});
+  }, []);
+
   const filtered = useMemo(() => {
-    let xs = rows.filter((r) => {
+    const xs = rows.filter((r) => {
       if (
         q &&
         !(
@@ -76,9 +84,9 @@ export function TokenTable() {
     xs.sort((a, b) => {
       switch (sort) {
         case "mcap":
-          return (b.mcUsd ?? 0) - (a.mcUsd ?? 0);
+          return (b.marketCapSol ?? 0) - (a.marketCapSol ?? 0);
         case "vol":
-          return (b.vol24hUsd ?? 0) - (a.vol24hUsd ?? 0);
+          return (b.vol24hSol ?? 0) - (a.vol24hSol ?? 0);
         case "stake":
           return b.stakePct - a.stakePct;
         case "fees":
@@ -157,7 +165,9 @@ export function TokenTable() {
                 </td>
               </tr>
             ) : (
-              filtered.map((r) => <TokenRow key={r.mint} row={r} />)
+              filtered.map((r) => (
+                <TokenRow key={r.mint} row={r} solUsd={solUsd} />
+              ))
             )}
           </tbody>
         </table>
@@ -166,7 +176,9 @@ export function TokenTable() {
   );
 }
 
-function TokenRow({ row }: { row: Row }) {
+function TokenRow({ row, solUsd }: { row: Row; solUsd: number }) {
+  const mcUsd = row.marketCapSol && solUsd ? row.marketCapSol * solUsd : 0;
+  const volUsd = row.vol24hSol && solUsd ? row.vol24hSol * solUsd : 0;
   return (
     <tr className="border-b border-[color:var(--border)]/40 transition hover:bg-[color:var(--green)]/[0.025]">
       <td className="px-4 py-2">
@@ -184,16 +196,24 @@ function TokenRow({ row }: { row: Row }) {
         </Link>
       </td>
       <td className="px-2 py-2 text-right font-semibold">
-        {row.mcUsd ? `$${fmtK(row.mcUsd)}` : "—"}
+        {mcUsd
+          ? `$${fmtK(mcUsd)}`
+          : row.marketCapSol
+            ? `${row.marketCapSol.toFixed(1)}◎`
+            : "—"}
       </td>
       <Pct value={row.priceChange5m} />
       <Pct value={row.priceChange1h} />
       <Pct value={row.priceChange24h} />
       <td className="px-2 py-2 text-right text-[color:var(--muted)]">
-        {row.vol24hUsd ? `$${fmtK(row.vol24hUsd)}` : "—"}
+        {volUsd
+          ? `$${fmtK(volUsd)}`
+          : row.vol24hSol
+            ? `${row.vol24hSol.toFixed(2)}◎`
+            : "—"}
       </td>
       <td className="px-2 py-2 text-right text-[color:var(--muted)]">
-        {row.txCount ?? "—"}
+        {row.txCount24h ?? "—"}
       </td>
       <td className="px-2 py-2 text-right text-[color:var(--muted)]">
         {row.holders ?? "—"}
