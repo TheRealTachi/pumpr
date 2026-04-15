@@ -73,4 +73,3 @@ A single compromise = every token's creator-fee stream drained.
 - [ ] Optional dev-buy with leftover SOL, auto-staked + locked
 - [ ] Revoke mint authority after launch
 - [ ] Swap `EnvAesKeyVault` for `KmsKeyVault`
-- [ ] Frontend (pump.fun colors, printr-style UX)
