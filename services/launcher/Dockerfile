@@ -36,9 +36,9 @@ RUN npm install --omit=dev
 
 COPY --from=builder /app/dist ./dist
 
-# Data dir — mount a Railway Volume here for persistence
-RUN mkdir -p /app/data/images && chown -R node:node /app/data
-USER node
+# Railway mounts the Volume as root-owned, so we stay as root (container is
+# already sandboxed).
+RUN mkdir -p /app/data/images
 
 EXPOSE 8787
 ENTRYPOINT ["tini", "--"]
