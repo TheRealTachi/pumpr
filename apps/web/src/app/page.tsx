@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { StatsTicker } from "@/components/StatsTicker";
 import { FeaturedCarousel } from "@/components/FeaturedCarousel";
-import { LiveStats } from "@/components/LiveStats";
 import { TokenTable } from "@/components/TokenTable";
 
 export default function LandingPage() {
@@ -50,8 +49,6 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
-
-      <LiveStats />
 
       <div className="divider-gradient bg-gradient-to-r from-transparent via-[color:var(--green)]/[0.03] to-transparent">
         <StatsTicker />
