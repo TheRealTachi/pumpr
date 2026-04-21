@@ -41,6 +41,7 @@ type Bucket = "new" | "almost" | "grad";
 
 export default function PulsePage() {
   const [rows, setRows] = useState<Row[]>([]);
+  const [solUsd, setSolUsd] = useState(0);
   const [paused, setPaused] = useState<Record<Bucket, boolean>>({
     new: false,
     almost: false,
@@ -56,14 +57,34 @@ export default function PulsePage() {
     const load = () =>
       fetch(`${LAUNCHER_API}/api/launches?status=launched&limit=200`)
         .then((r) => (r.ok ? r.json() : { items: [] }))
-        .then((d) => setRows(d.items ?? []))
+        .then((d) => {
+          const items: Row[] = d.items ?? [];
+          setRows(
+            items.map((r) => ({
+              ...r,
+              mcUsd:
+                r.marketCapSol && solUsd ? r.marketCapSol * solUsd : r.mcUsd,
+            })),
+          );
+        })
         .catch(() => setRows([]));
     load();
     const id = setInterval(() => {
       if (!Object.values(paused).every(Boolean)) load();
     }, 10_000);
     return () => clearInterval(id);
-  }, [paused]);
+  }, [paused, solUsd]);
+
+  useEffect(() => {
+    const load = () =>
+      fetch(`${LAUNCHER_API}/api/sol-usd`)
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => d?.price && setSolUsd(d.price))
+        .catch(() => {});
+    load();
+    const id = setInterval(load, 60_000);
+    return () => clearInterval(id);
+  }, []);
 
   const { newCreated, almostGrad, graduated } = useMemo(() => {
     const n: Row[] = [];
@@ -293,11 +314,7 @@ function TokenCard({ row, bucket }: { row: Row; bucket: Bucket }) {
             <div>
               <span className="text-[color:var(--muted)]">MC </span>
               <span className="font-semibold">
-                {row.marketCapSol
-                  ? `${row.marketCapSol.toFixed(2)}◎`
-                  : row.mcUsd
-                    ? `$${fmtK(row.mcUsd)}`
-                    : "—"}
+                {row.mcUsd ? `$${fmtK(row.mcUsd)}` : "—"}
               </span>
             </div>
             <div>

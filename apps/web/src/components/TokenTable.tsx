@@ -196,11 +196,7 @@ function TokenRow({ row, solUsd }: { row: Row; solUsd: number }) {
         </Link>
       </td>
       <td className="px-2 py-2 text-right font-semibold">
-        {mcUsd
-          ? `$${fmtK(mcUsd)}`
-          : row.marketCapSol
-            ? `${row.marketCapSol.toFixed(1)}◎`
-            : "—"}
+        {mcUsd ? `$${fmtK(mcUsd)}` : "—"}
       </td>
       <Pct value={row.priceChange5m} />
       <Pct value={row.priceChange1h} />

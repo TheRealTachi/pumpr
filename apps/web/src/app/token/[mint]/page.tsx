@@ -165,10 +165,7 @@ function HeaderStats({
         }
         good={data?.change24h !== undefined ? data.change24h >= 0 : undefined}
       />
-      <Stat
-        label="MC"
-        value={mcUsd ? `$${fmtK(mcUsd)}` : data?.marketCapSol ? `${data.marketCapSol.toFixed(2)} ◎` : "—"}
-      />
+      <Stat label="MC" value={mcUsd ? `$${fmtK(mcUsd)}` : "—"} />
       <Stat
         label="VOL 24H"
         value={data?.vol24hUsd ? `$${fmtK(data.vol24hUsd)}` : "—"}
