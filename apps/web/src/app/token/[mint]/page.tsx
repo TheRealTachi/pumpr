@@ -157,7 +157,7 @@ function HeaderStats({
     <div className="flex flex-wrap items-center gap-5 border-l border-[color:var(--border)] pl-4">
       <Stat
         label="PRICE"
-        value={priceUsd ? `$${priceUsd.toPrecision(4)}` : data?.priceSol ? `${data.priceSol.toPrecision(4)} ◎` : "—"}
+        value={priceUsd ? `$${priceUsd.toPrecision(4)}` : "—"}
         sub={
           data?.change24h !== undefined
             ? `${data.change24h >= 0 ? "+" : ""}${data.change24h.toFixed(1)}%`
@@ -240,11 +240,7 @@ function ChartHeader({
     <div className="flex flex-wrap items-center justify-between gap-3">
       <div className="flex items-center gap-2 text-xs text-[color:var(--muted)]">
         <span className="font-mono text-[color:var(--text)]">
-          {priceUsd
-            ? `$${priceUsd.toPrecision(6)}`
-            : data?.priceSol
-              ? `${data.priceSol.toPrecision(6)} ◎`
-              : "price —"}
+          {priceUsd ? `$${priceUsd.toPrecision(6)}` : "price —"}
         </span>
       </div>
       <div className="flex items-center gap-2">
