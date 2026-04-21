@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { StatsTicker } from "@/components/StatsTicker";
 import { FeaturedCarousel } from "@/components/FeaturedCarousel";
+import { LiveStats } from "@/components/LiveStats";
 import { TokenTable } from "@/components/TokenTable";
 
 export default function LandingPage() {
@@ -50,13 +51,97 @@ export default function LandingPage() {
         </div>
       </section>
 
+      <LiveStats />
+
       <div className="divider-gradient bg-gradient-to-r from-transparent via-[color:var(--green)]/[0.03] to-transparent">
         <StatsTicker />
       </div>
 
       <TokenTable />
 
-      <section className="mx-auto max-w-6xl px-6 py-20">
+      {/* HOW IT WORKS IN 3 STEPS */}
+      <section className="relative mx-auto max-w-6xl px-6 py-24">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-transparent via-[color:var(--green)]/[0.03] to-transparent"
+        />
+        <div className="mb-10 text-center">
+          <div className="font-mono text-[11px] uppercase tracking-[0.25em] text-[color:var(--green)]">
+            the loop
+          </div>
+          <h2 className="heavy mt-2 text-3xl sm:text-4xl">
+            Launch. Lock.{" "}
+            <span className="text-[color:var(--green)]">Earn.</span>
+          </h2>
+          <p className="mx-auto mt-3 max-w-xl text-sm text-[color:var(--muted)]">
+            Three steps, one loop. Creators launch on pump.fun through pumpr,
+            holders lock via Streamflow, and SOL rewards drop every 15 minutes.
+          </p>
+        </div>
+
+        <div className="relative grid gap-4 sm:grid-cols-3">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-x-12 top-1/2 hidden h-px -translate-y-1/2 bg-gradient-to-r from-transparent via-[color:var(--green-dim)] to-transparent sm:block"
+          />
+          <StepCard
+            n="01"
+            title="Launch on pump.fun"
+            body="Deposit 0.05 SOL into a fresh dev wallet. pumpr mints a vanity token (…prr) and posts it to pump.fun."
+            icon={
+              <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.6}>
+                <path
+                  d="M12 3v18M5 10l7-7 7 7"
+                  stroke="currentColor"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            }
+          />
+          <StepCard
+            n="02"
+            title="Lock via Streamflow"
+            body="Holders connect their wallet and lock tokens for 1, 3, or 7 days. Non-custodial — pumpr never holds your tokens."
+            icon={
+              <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.6}>
+                <rect
+                  x="5"
+                  y="11"
+                  width="14"
+                  height="9"
+                  rx="2"
+                  stroke="currentColor"
+                />
+                <path
+                  d="M8 11V8a4 4 0 018 0v3"
+                  stroke="currentColor"
+                  strokeLinecap="round"
+                />
+              </svg>
+            }
+          />
+          <StepCard
+            n="03"
+            title="Earn SOL rewards"
+            body="Every 15 minutes pumpr claims pump.fun creator fees and pays 90% pro-rata to active stakers, weighted by tier."
+            icon={
+              <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.6}>
+                <circle cx="12" cy="12" r="8" stroke="currentColor" />
+                <path
+                  d="M8 12l3 3 5-5"
+                  stroke="currentColor"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            }
+          />
+        </div>
+      </section>
+
+      {/* WHY PUMPR */}
+      <section className="mx-auto max-w-6xl px-6 pb-24">
         <div className="mb-8 text-center">
           <div className="font-mono text-[11px] uppercase tracking-[0.25em] text-[color:var(--muted)]">
             why pumpr
@@ -82,7 +167,46 @@ export default function LandingPage() {
             body="If the creator exits, staking keeps streaming fees to holders — the curve doesn't care."
           />
         </div>
+
+        <div className="mt-14 text-center">
+          <Link
+            href="/launch"
+            className="glow inline-flex items-center gap-2 rounded-lg border border-[color:var(--green)] bg-[color:var(--green)] px-8 py-4 text-sm font-bold uppercase tracking-[0.22em] text-black transition hover:bg-[color:var(--green-soft)]"
+          >
+            Launch your token
+            <span aria-hidden>→</span>
+          </Link>
+        </div>
       </section>
+    </div>
+  );
+}
+
+function StepCard({
+  n,
+  title,
+  body,
+  icon,
+}: {
+  n: string;
+  title: string;
+  body: string;
+  icon: React.ReactNode;
+}) {
+  return (
+    <div className="panel relative overflow-hidden p-6">
+      <div className="mb-4 flex items-center justify-between">
+        <div className="grid h-12 w-12 place-items-center rounded-xl border border-[color:var(--green-dim)]/40 bg-[color:var(--green)]/10 text-[color:var(--green)]">
+          <span className="block h-6 w-6">{icon}</span>
+        </div>
+        <div className="font-mono text-[11px] font-bold tracking-[0.25em] text-[color:var(--muted)]">
+          {n}
+        </div>
+      </div>
+      <div className="text-lg font-bold tracking-tight">{title}</div>
+      <div className="mt-2 text-sm leading-relaxed text-[color:var(--muted)]">
+        {body}
+      </div>
     </div>
   );
 }
