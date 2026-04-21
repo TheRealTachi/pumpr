@@ -79,112 +79,46 @@ body {
   color: var(--green);
 }
 
-/* Hero sweep backdrop */
+/* Hero sweep backdrop — soft green wash from center, dark vignette edges */
 .hero-bg {
   position: relative;
   isolation: isolate;
   overflow: hidden;
+  background: radial-gradient(
+    ellipse 80% 70% at 50% 0%,
+    rgba(61, 218, 78, 0.14),
+    transparent 60%
+  );
 }
 .hero-bg::before {
   content: "";
   position: absolute;
-  inset: -10% -5%;
-  z-index: -2;
-  background-image:
-    radial-gradient(
-      ellipse 60% 45% at 15% 45%,
-      rgba(61, 218, 78, 0.22),
-      transparent 65%
-    ),
-    radial-gradient(
-      ellipse 55% 40% at 85% 55%,
-      rgba(142, 255, 122, 0.18),
-      transparent 65%
-    );
-  filter: blur(6px);
-  pointer-events: none;
-}
-
-/* Background video — blurred + darkened so foreground stays readable */
-.hero-video {
-  position: absolute;
-  inset: 0;
-  z-index: -3;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  filter: blur(6px) brightness(0.45) saturate(1.1);
-  transform: scale(1.05); /* hide blur edges */
-  pointer-events: none;
-}
-.hero-video-overlay {
-  position: absolute;
   inset: 0;
   z-index: -2;
   background:
-    linear-gradient(
-      180deg,
-      rgba(6, 8, 7, 0.35) 0%,
-      rgba(6, 8, 7, 0.7) 100%
-    );
-  pointer-events: none;
-}
-.hero-bg::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background-image:
     radial-gradient(
-      circle 1px at 12% 30%,
-      rgba(255, 255, 255, 0.35) 99%,
-      transparent
-    ),
-    radial-gradient(
-      circle 1px at 68% 20%,
-      rgba(255, 255, 255, 0.25) 99%,
-      transparent
-    ),
-    radial-gradient(
-      circle 1px at 42% 80%,
-      rgba(255, 255, 255, 0.3) 99%,
-      transparent
-    ),
-    radial-gradient(
-      circle 1px at 85% 65%,
-      rgba(255, 255, 255, 0.2) 99%,
-      transparent
-    ),
-    radial-gradient(
-      circle 1px at 28% 62%,
-      rgba(255, 255, 255, 0.18) 99%,
-      transparent
+      ellipse 120% 60% at 50% 100%,
+      rgba(0, 0, 0, 0.6),
+      transparent 70%
     );
   pointer-events: none;
 }
 
+/* Single soft green streak behind the headline */
 .hero-streak {
   position: absolute;
-  top: 40%;
-  left: -20%;
-  right: -20%;
-  height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(61, 218, 78, 0.6) 40%,
-    rgba(142, 255, 122, 0.9) 50%,
-    rgba(61, 218, 78, 0.6) 60%,
-    transparent
+  top: 22%;
+  left: -10%;
+  right: -10%;
+  height: 220px;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(61, 218, 78, 0.22),
+    transparent 60%
   );
-  filter: blur(1px);
+  filter: blur(40px);
   z-index: -1;
   pointer-events: none;
-}
-.hero-streak.thick {
-  height: 40px;
-  filter: blur(40px);
-  opacity: 0.5;
 }
 
 /* Subtle grid overlay for backgrounds */

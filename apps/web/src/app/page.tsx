@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { StatsTicker } from "@/components/StatsTicker";
 import { FeaturedCarousel } from "@/components/FeaturedCarousel";
 import { TokenTable } from "@/components/TokenTable";
@@ -5,35 +6,45 @@ import { TokenTable } from "@/components/TokenTable";
 export default function LandingPage() {
   return (
     <div>
-      {/* HERO — featured carousel with sweeping green backdrop */}
+      {/* HERO */}
       <section className="hero-bg grid-bg">
-        <video
-          className="hero-video"
-          src="/background.mp4"
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="auto"
-        />
-        <div className="hero-video-overlay" />
-        <div className="hero-streak thick" />
         <div className="hero-streak" />
-        <div className="relative mx-auto max-w-6xl px-6 pb-20 pt-24 text-center">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[color:var(--green-dim)]/40 bg-[color:var(--green)]/5 px-3 py-1 font-mono text-[11px] text-[color:var(--green)]">
+        <div className="relative mx-auto max-w-5xl px-6 pb-16 pt-20 text-center sm:pb-20 sm:pt-28">
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[color:var(--green-dim)]/40 bg-[color:var(--green)]/5 px-3 py-1 font-mono text-[10px] text-[color:var(--green)]">
             <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--green)] pulse-glow" />
-            <span className="tracking-[0.25em]">
-              PUMPR V1 · PROOF OF BELIEF
+            <span className="tracking-[0.28em]">
+              PROOF OF BELIEF · LIVE ON MAINNET
             </span>
           </div>
-          <h1 className="heavy heavy-split whitespace-nowrap text-4xl sm:text-5xl md:text-6xl">
+          <h1 className="heavy heavy-split mx-auto max-w-4xl text-balance text-5xl leading-[0.95] sm:text-6xl md:text-7xl">
             <span className="tone-a">WHERE HOLDERS</span>{" "}
             <span className="tone-b">WIN</span>
           </h1>
-          <p className="heavy mx-auto mt-6 whitespace-nowrap text-[11px] text-[color:var(--muted)] sm:text-sm md:text-base">
-            EVERY TOKEN LAUNCHED ON PUMPR STREAMS CREATOR FEES BACK TO STAKERS FOREVER
+          <p className="mx-auto mt-5 max-w-xl text-balance text-base leading-relaxed text-[color:var(--muted)] sm:mt-6 sm:text-lg">
+            Every token launched on pumpr streams pump.fun creator fees back
+            to stakers in SOL — every 15 minutes, forever.
           </p>
-          <div className="mt-16">
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+            <Link
+              href="/launch"
+              className="glow rounded-lg border border-[color:var(--green)] bg-[color:var(--green)] px-6 py-3 text-sm font-bold uppercase tracking-[0.2em] text-black transition hover:bg-[color:var(--green-soft)]"
+            >
+              Launch a token →
+            </Link>
+            <Link
+              href="/how-it-works"
+              className="rounded-lg border border-[color:var(--border)] bg-[color:var(--panel-solid)] px-6 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-[color:var(--muted)] transition hover:border-[color:var(--green-dim)] hover:text-white"
+            >
+              How it works
+            </Link>
+          </div>
+          <div className="mx-auto mt-10 flex max-w-2xl flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[10px] font-mono uppercase tracking-[0.2em] text-[color:var(--muted)]">
+            <HeroChip>pump.fun launches</HeroChip>
+            <HeroChip>streamflow locks</HeroChip>
+            <HeroChip>15-min payouts</HeroChip>
+            <HeroChip>non-custodial</HeroChip>
+          </div>
+          <div className="mt-16 sm:mt-20">
             <FeaturedCarousel />
           </div>
         </div>
@@ -73,6 +84,15 @@ export default function LandingPage() {
         </div>
       </section>
     </div>
+  );
+}
+
+function HeroChip({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      <span className="h-1 w-1 rounded-full bg-[color:var(--green)]/70" />
+      {children}
+    </span>
   );
 }
 
