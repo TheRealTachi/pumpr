@@ -111,16 +111,13 @@ body::before {
   color: var(--green);
 }
 
-/* Hero sweep backdrop — soft green wash from center, dark vignette edges */
+/* Hero sweep backdrop — soft green wash from center, dark vignette edges.
+   Kept transparent so the page-wide background video (home only) shows
+   through when present. */
 .hero-bg {
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  background: radial-gradient(
-    ellipse 80% 70% at 50% 0%,
-    rgba(61, 218, 78, 0.14),
-    transparent 60%
-  );
 }
 .hero-bg::before {
   content: "";
@@ -129,11 +126,25 @@ body::before {
   z-index: -2;
   background:
     radial-gradient(
+      ellipse 80% 70% at 50% 0%,
+      rgba(61, 218, 78, 0.12),
+      transparent 60%
+    ),
+    radial-gradient(
       ellipse 120% 60% at 50% 100%,
-      rgba(0, 0, 0, 0.6),
+      rgba(0, 0, 0, 0.45),
       transparent 70%
     );
   pointer-events: none;
+}
+
+/* When the home page renders, drop the body's radial ambient glow (the
+   video already provides atmosphere) and let the video show through. */
+body:has(.home-root) {
+  background: var(--bg);
+}
+body:has(.home-root)::before {
+  display: none;
 }
 
 /* Single soft green streak behind the headline */

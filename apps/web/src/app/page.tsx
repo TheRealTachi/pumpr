@@ -5,7 +5,29 @@ import { TokenTable } from "@/components/TokenTable";
 
 export default function LandingPage() {
   return (
-    <div>
+    <div className="home-root relative">
+      {/* Fixed desktop-only background video. Place the file at
+          apps/web/public/bg.mp4. Hidden on mobile to save bandwidth. */}
+      <div className="pointer-events-none fixed inset-0 -z-20 hidden md:block">
+        <video
+          className="h-full w-full object-cover"
+          src="/bg.mp4"
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
+        />
+        <div className="absolute inset-0 bg-[rgba(6,8,7,0.55)]" />
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(ellipse 120% 80% at 50% 10%, rgba(6,8,7,0.25), rgba(6,8,7,0.85) 80%)",
+          }}
+        />
+      </div>
+
       {/* HERO */}
       <section className="hero-bg grid-bg">
         <div className="hero-streak" />
