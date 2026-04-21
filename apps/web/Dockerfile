@@ -9,7 +9,16 @@ FROM node:20-bookworm-slim AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-ENV NEXT_TELEMETRY_DISABLED=1
+
+# NEXT_PUBLIC_* values are inlined at build time, not runtime, so they must
+# be passed in as build args. Railway forwards service vars as build args.
+ARG NEXT_PUBLIC_SOLANA_RPC_URL
+ARG NEXT_PUBLIC_LAUNCHER_API
+ARG NEXT_PUBLIC_STAKING_PROGRAM_ID
+ENV NEXT_TELEMETRY_DISABLED=1 \
+    NEXT_PUBLIC_SOLANA_RPC_URL=$NEXT_PUBLIC_SOLANA_RPC_URL \
+    NEXT_PUBLIC_LAUNCHER_API=$NEXT_PUBLIC_LAUNCHER_API \
+    NEXT_PUBLIC_STAKING_PROGRAM_ID=$NEXT_PUBLIC_STAKING_PROGRAM_ID
 RUN npm run build
 
 FROM node:20-bookworm-slim AS runtime
