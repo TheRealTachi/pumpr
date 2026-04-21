@@ -50,7 +50,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <div className="border-y border-[color:var(--border)] bg-[color:var(--bg-2)]/50">
+      <div className="divider-gradient bg-gradient-to-r from-transparent via-[color:var(--green)]/[0.03] to-transparent">
         <StatsTicker />
       </div>
 
@@ -106,8 +106,12 @@ function FeatureCard({
   body: string;
 }) {
   return (
-    <div className="panel panel-hover p-6">
-      <div className="mb-4 font-mono text-[11px] font-semibold tracking-widest text-[color:var(--green)]">
+    <div className="panel panel-hover group relative overflow-hidden p-6">
+      <div
+        className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full opacity-0 blur-3xl transition-opacity duration-500 group-hover:opacity-100"
+        style={{ background: "var(--green)" }}
+      />
+      <div className="mb-4 inline-flex items-center gap-2 rounded-md border border-[color:var(--green-dim)]/30 bg-[color:var(--green)]/5 px-2 py-0.5 font-mono text-[10px] font-bold tracking-[0.2em] text-[color:var(--green)]">
         {n}
       </div>
       <div className="text-base font-bold tracking-tight">{title}</div>
