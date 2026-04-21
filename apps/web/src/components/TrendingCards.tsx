@@ -87,7 +87,7 @@ export function TrendingCards() {
                 lifetime fees
               </div>
               <div className="mt-0.5 font-bold text-[color:var(--green)]">
-                {(Number(BigInt(r.lifetimeRewards || "0")) / 1e9).toFixed(3)}{" "}
+                {(Number(r.lifetimeRewards || "0") / 1e9).toFixed(3)}{" "}
                 <span className="text-[color:var(--muted)]">SOL</span>
               </div>
             </div>

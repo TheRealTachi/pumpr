@@ -311,9 +311,7 @@ function TokenCard({ row, bucket }: { row: Row; bucket: Bucket }) {
                 fees
               </span>
               <span className="font-semibold">
-                {(Number(BigInt(row.lifetimeRewards || "0")) / 1e9).toFixed(
-                  2,
-                )}
+                {(Number(row.lifetimeRewards || "0") / 1e9).toFixed(2)}
                 <span className="text-[color:var(--muted)]">◎</span>
               </span>
             </div>

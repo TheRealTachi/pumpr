@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   createChart,
   type IChartApi,
@@ -16,18 +16,20 @@ interface Candle {
   high: number;
   low: number;
   close: number;
-  volume?: number;
 }
+
+export type Interval = "1m" | "5m" | "15m" | "1h" | "4h" | "1d";
+const INTERVALS: Interval[] = ["1m", "5m", "15m", "1h", "4h", "1d"];
 
 export function PriceChart({ mint }: { mint: string }) {
   const container = useRef<HTMLDivElement>(null);
-  const chartRef = useRef<IChartApi | null>(null);
   const seriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
+  const [interval, setInterval] = useState<Interval>("1m");
 
   useEffect(() => {
     if (!container.current) return;
 
-    const chart = createChart(container.current, {
+    const chart: IChartApi = createChart(container.current, {
       layout: {
         background: { type: ColorType.Solid, color: "transparent" },
         textColor: "#7a857d",
@@ -42,11 +44,16 @@ export function PriceChart({ mint }: { mint: string }) {
         vertLine: { color: "rgba(61, 218, 78,0.3)" },
         horzLine: { color: "rgba(61, 218, 78,0.3)" },
       },
-      rightPriceScale: { borderColor: "rgba(255,255,255,0.06)" },
+      rightPriceScale: {
+        borderColor: "rgba(255,255,255,0.06)",
+        scaleMargins: { top: 0.2, bottom: 0.2 },
+      },
       timeScale: {
         borderColor: "rgba(255,255,255,0.06)",
         timeVisible: true,
         secondsVisible: false,
+        rightOffset: 12,
+        barSpacing: 8,
       },
       height: 380,
       autoSize: true,
@@ -58,64 +65,73 @@ export function PriceChart({ mint }: { mint: string }) {
       wickUpColor: "#3dda4e",
       wickDownColor: "#ff5d5d",
       borderVisible: false,
+      priceFormat: { type: "price", precision: 12, minMove: 1e-12 },
     });
-
-    chartRef.current = chart;
     seriesRef.current = series;
 
-    // placeholder data until trade indexer is wired
-    const demo = buildDemoCandles();
-    series.setData(
-      demo.map((c) => ({
-        time: c.time as never,
-        open: c.open,
-        high: c.high,
-        low: c.low,
-        close: c.close,
-      })),
-    );
-
-    // attempt real data from the launcher API
-    fetch(`${LAUNCHER_API}/api/tokens/${mint}/candles?interval=1h&limit=200`)
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => {
-        if (d && Array.isArray(d.items) && d.items.length > 0) {
-          series.setData(
-            d.items.map((c: Candle) => ({
-              time: c.time as never,
-              open: c.open,
-              high: c.high,
-              low: c.low,
-              close: c.close,
-            })),
-          );
-        }
-      })
-      .catch(() => {});
+    let cancelled = false;
+    let firstLoad = true;
+    const load = () =>
+      fetch(
+        `${LAUNCHER_API}/api/tokens/${mint}/candles?interval=${interval}&limit=500`,
+      )
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => {
+          if (cancelled || !seriesRef.current) return;
+          if (d && Array.isArray(d.items) && d.items.length > 0) {
+            seriesRef.current.setData(
+              d.items.map((c: Candle) => ({
+                time: c.time as never,
+                open: c.open,
+                high: c.high,
+                low: c.low,
+                close: c.close,
+              })),
+            );
+            // Only adjust the viewport on initial load — don't yank the user's
+            // pan/zoom around on every 15s refresh.
+            if (firstLoad) {
+              const n = d.items.length;
+              chart.timeScale().setVisibleLogicalRange({
+                from: Math.max(0, n - 60),
+                to: n + 6,
+              });
+              firstLoad = false;
+            }
+          } else {
+            seriesRef.current.setData([]);
+          }
+        })
+        .catch(() => {});
+    load();
+    const id = globalThis.setInterval(load, 15_000);
 
     return () => {
+      cancelled = true;
+      globalThis.clearInterval(id);
       chart.remove();
-      chartRef.current = null;
       seriesRef.current = null;
     };
-  }, [mint]);
+  }, [mint, interval]);
 
-  return <div ref={container} className="h-[380px] w-full" />;
-}
-
-function buildDemoCandles(): Candle[] {
-  const out: Candle[] = [];
-  const now = Math.floor(Date.now() / 1000);
-  let price = 0.00002;
-  for (let i = 200; i >= 0; i--) {
-    const t = now - i * 60 * 60;
-    const change = (Math.random() - 0.48) * 0.03;
-    const open = price;
-    const close = price * (1 + change);
-    const high = Math.max(open, close) * (1 + Math.random() * 0.01);
-    const low = Math.min(open, close) * (1 - Math.random() * 0.01);
-    out.push({ time: t, open, high, low, close });
-    price = close;
-  }
-  return out;
+  return (
+    <div>
+      <div className="mb-2 flex items-center gap-1">
+        {INTERVALS.map((i) => (
+          <button
+            key={i}
+            onClick={() => setInterval(i)}
+            className={`rounded px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider transition ${
+              interval === i
+                ? "bg-[color:var(--green)]/10 text-[color:var(--green)]"
+                : "text-[color:var(--muted)] hover:text-white"
+            }`}
+          >
+            {i}
+          </button>
+        ))}
+      </div>
+      <div ref={container} className="h-[380px] w-full" />
+    </div>
+  );
 }

@@ -18,17 +18,17 @@ const SIDEBAR: {
   {
     group: "Staking",
     items: [
-      { id: "send-to-stake", label: "Send to stake" },
+      { id: "streamflow", label: "Locking via Streamflow" },
       { id: "tiers", label: "Lock tiers" },
       { id: "rewards", label: "Earning rewards" },
-      { id: "unstake", label: "Auto-unlock" },
+      { id: "unlock", label: "Unlock + withdraw" },
     ],
   },
   {
     group: "Trust",
     items: [
       { id: "custody", label: "Custody model" },
-      { id: "why-send", label: "Why send-to-stake" },
+      { id: "why-streamflow", label: "Why Streamflow" },
       { id: "risks", label: "Known risks" },
     ],
   },
@@ -39,7 +39,6 @@ const FLAT = SIDEBAR.flatMap((g) => g.items);
 export default function HowItWorksPage() {
   const [active, setActive] = useState("overview");
 
-  // Scroll-spy: update active anchor as user scrolls
   useEffect(() => {
     const onScroll = () => {
       const threshold = 140;
@@ -52,7 +51,6 @@ export default function HowItWorksPage() {
           return;
         }
       }
-      // past last
       setActive(FLAT[FLAT.length - 1].id);
     };
     onScroll();
@@ -62,7 +60,6 @@ export default function HowItWorksPage() {
 
   return (
     <div className="mx-auto grid max-w-[1280px] grid-cols-1 gap-8 px-6 py-10 lg:grid-cols-[240px_minmax(0,1fr)_200px]">
-      {/* LEFT SIDEBAR */}
       <aside className="sticky top-20 hidden h-[calc(100vh-6rem)] self-start overflow-y-auto pr-2 text-sm lg:block">
         <div className="mb-6 font-mono text-[10px] font-semibold uppercase tracking-[0.25em] text-[color:var(--muted)]">
           pumpr docs
@@ -95,11 +92,10 @@ export default function HowItWorksPage() {
         ))}
       </aside>
 
-      {/* MAIN CONTENT */}
       <article className="doc-prose min-w-0">
         <header className="border-b border-[color:var(--border)] pb-6">
           <div className="font-mono text-[11px] uppercase tracking-[0.25em] text-[color:var(--muted)]">
-            docs · v1
+            docs · v2
           </div>
           <h1 className="heavy mt-2 text-4xl md:text-5xl">
             How <span className="text-[color:var(--green)]">pumpr</span>{" "}
@@ -107,23 +103,24 @@ export default function HowItWorksPage() {
           </h1>
           <p className="mt-3 max-w-2xl text-sm text-[color:var(--muted)]">
             pumpr is a pump.fun launchpad with Proof-of-Belief staking. Every
-            token launched streams creator fees back to its holders — forever.
+            token launched streams creator fees back to its stakers — paid
+            directly, every 30 minutes.
           </p>
         </header>
 
         <Section id="overview" title="Overview">
           <p>
             pumpr wraps pump.fun&apos;s bonding-curve launchpad with a
-            send-to-stake fee-sharing layer. When someone creates a token on
-            pumpr, pumpr takes custody of the token&apos;s creator wallet so
-            that every SOL of creator fee earned on pump.fun can be routed back
-            to the people holding and staking the token, proportional to how
-            long they commit.
+            non-custodial fee-sharing layer. Stakers lock their tokens on{" "}
+            <strong>Streamflow</strong> — pumpr doesn&apos;t hold staked
+            tokens, doesn&apos;t gate withdrawals, and can&apos;t move them.
+            pumpr indexes the Streamflow program and pays each staker&apos;s
+            wallet a pro-rata slice of pump.fun creator fees in SOL.
           </p>
           <Callout variant="info">
-            <strong>tl;dr</strong> — launch a token, holders stake by sending,
-            pumpr auto-returns tokens after the lock, and splits pump.fun
-            creator fees pro-rata every hour.
+            <strong>tl;dr</strong> — launch a token, stakers lock on Streamflow
+            from their own wallet, pumpr auto-pays SOL rewards every 30
+            minutes. Tokens return at cliff via Streamflow.
           </Callout>
         </Section>
 
@@ -133,22 +130,22 @@ export default function HowItWorksPage() {
             <li>
               pumpr generates a fresh Solana wallet per launch — the{" "}
               <Code>dev wallet</Code> — and shows you its address. You never
-              see its private key; pumpr custodies it.
+              see its private key; pumpr custodies it to sign pump.fun calls on
+              your behalf.
             </li>
             <li>
               You send <strong>0.05 SOL</strong> to the dev wallet.
             </li>
             <li>
-              pumpr detects the deposit, shows you a{" "}
-              <Code>LAUNCH NOW</Code> button, and on click signs the pump.fun
-              create-token transaction from the dev wallet. The dev wallet
-              becomes the official creator, so pump.fun creator fees flow to
-              it.
+              pumpr detects the deposit, shows a <Code>LAUNCH NOW</Code>{" "}
+              button, and on click signs the pump.fun create-token transaction.
+              The dev wallet becomes the official creator so creator fees flow
+              to it.
             </li>
             <li>
-              pumpr then generates three per-token staking wallets (1-day,
-              3-day, 7-day) and creates their SPL token accounts so users can
-              send directly.
+              Mint addresses end in <Code>…prr</Code> — pumpr grinds vanity
+              keypairs ahead of time so every launch gets a branded mint
+              instantly.
             </li>
           </Ol>
         </Section>
@@ -158,25 +155,52 @@ export default function HowItWorksPage() {
             head={["Item", "Cost", "Paid by"]}
             rows={[
               ["pump.fun create-token tx", "~0.02 SOL", "dev wallet"],
-              ["3 × staking ATA creation (rent)", "~0.006 SOL", "dev wallet"],
-              ["Escrow SOL reserve for unlock fees", "~0.003 SOL", "dev wallet"],
               ["Priority + tx fees", "~0.001 SOL", "dev wallet"],
-              ["Total", "~0.03 SOL", "leaves ~0.02 SOL buffer"],
+              ["Dev wallet gas reserve (for fee claims)", "~0.02 SOL", "dev wallet"],
+              ["Total", "~0.04 SOL", "leaves ~0.01 SOL buffer"],
             ]}
           />
+          <p>
+            Stakers additionally pay Streamflow&apos;s{" "}
+            <strong>0.19% protocol fee</strong> on the locked amount at
+            creation time, plus normal Solana tx + rent costs. pumpr itself
+            takes no fee on the lock — only on rewards (see below).
+          </p>
         </Section>
 
-        <Section id="send-to-stake" title="Send to stake">
+        <Section id="streamflow" title="Locking via Streamflow">
           <p>
-            There is no <em>connect wallet</em> step for staking. To stake,
-            send the token to one of three staking addresses shown on the
-            token page — from any wallet (Phantom, Solflare, Ledger, or even
-            an exchange withdrawal).
+            Staking on pumpr is a Streamflow vesting contract where you are
+            both the sender and the recipient. From the token page:
           </p>
+          <Ol>
+            <li>
+              Connect your wallet (Phantom or Solflare) via the button in the
+              top-right.
+            </li>
+            <li>
+              Choose a tier (1d / 3d / 7d) and enter an amount — or tap the{" "}
+              <Code>25% · 50% · 75% · MAX</Code> shortcuts which read your
+              token balance.
+            </li>
+            <li>
+              Click <Code>LOCK</Code>. Your wallet signs a Streamflow{" "}
+              <em>token lock</em> contract with these params, set by pumpr:
+            </li>
+          </Ol>
+          <Table
+            head={["Param", "Value", "Why"]}
+            rows={[
+              ["recipient", "your own wallet", "self-lock — no one else can withdraw"],
+              ["cliff", "start + tier duration", "full unlock at cliff, nothing drips"],
+              ["cancelableBy*", "false", "immutable — no early exit"],
+              ["transferableBy*", "false", "lock can't be transferred away"],
+            ]}
+          />
           <p>
-            pumpr indexes the incoming transfer, credits your{" "}
-            <em>sender address</em> as a staker, and starts a timer matching
-            the tier you sent to.
+            pumpr&apos;s indexer polls Streamflow for locks on your mint every
+            30 seconds, classifies each by cliff duration, and adds it to the
+            stakers list.
           </p>
         </Section>
 
@@ -190,113 +214,118 @@ export default function HowItWorksPage() {
             ]}
           />
           <p>
-            Multipliers weight your share of rewards. Longer stake = bigger
-            slice of the fee pool each hour you&apos;re active.
+            Multipliers weight your slice of each reward distribution. Longer
+            lock = bigger slice. Locks longer than 7 days also bucket into the
+            7-day tier (we don&apos;t reject them).
           </p>
         </Section>
 
         <Section id="rewards" title="Earning rewards">
-          <p>Every hour pumpr runs a distribution job for each token:</p>
+          <p>Every 30 minutes pumpr runs a distribution job for each token:</p>
           <Ol>
             <li>
-              Calls <Code>collectCreatorFee</Code> via pumpportal so any
-              accumulated pump.fun fees arrive in the dev wallet.
+              Calls <Code>collectCreatorFee</Code> via pumpportal so accumulated
+              pump.fun fees land in the dev wallet.
             </li>
             <li>
-              Computes each active deposit&apos;s weight:{" "}
-              <Code>amount × tier_mult × fraction_of_hour_active</Code>
+              Computes each active lock&apos;s weight:{" "}
+              <Code>amount × tier_mult × fraction_of_window_active</Code>
             </li>
             <li>
               Splits available SOL: <strong>90% to stakers</strong> pro-rata,{" "}
               <strong>10% to the protocol treasury</strong>.
             </li>
             <li>
-              Sends SOL directly to each staker&apos;s sender address. No
-              claiming, no signing, no extra fees on your side.
+              Sends SOL directly to each staker&apos;s wallet. No claiming, no
+              signing, no extra fees on your side.
             </li>
           </Ol>
           <Callout variant="good">
-            Your only action is staking. Rewards arrive automatically to the
-            same wallet you sent from.
+            Rewards land in the wallet that created the lock, automatically,
+            every 30 minutes. Check your <Code>+X.XXXX ◎</Code> in the stakers
+            list on the token page.
           </Callout>
         </Section>
 
-        <Section id="unstake" title="Auto-unlock">
+        <Section id="unlock" title="Unlock + withdraw">
           <p>
-            When your lock period elapses, a worker sweeps eligible deposits
-            and transfers the tokens back to the original sender address.
-            There&apos;s no button to press — it happens within a minute of
-            the unlock time.
-          </p>
-          <p>
-            During the lock your tokens are held by the staking wallet and
-            cannot be moved by you. During the lock you continue to earn
-            rewards every hour at your tier multiplier.
+            When your cliff hits, Streamflow flips the lock to withdrawable.
+            pumpr continues paying rewards as long as the lock contract is
+            still open on-chain. Go to{" "}
+            <a
+              href="https://app.streamflow.finance"
+              target="_blank"
+              rel="noreferrer noopener"
+              className="text-[color:var(--green)] underline"
+            >
+              app.streamflow.finance
+            </a>{" "}
+            with the same wallet to withdraw — your tokens land back in your
+            wallet, and pumpr stops counting that lock toward reward weight.
           </p>
         </Section>
 
         <Section id="custody" title="Custody model">
-          <p>pumpr custodies two kinds of keys per launch:</p>
-          <Ol>
-            <li>
-              The <strong>dev wallet</strong> — needed to sign pump.fun
-              create-token and later{" "}
-              <Code>collectCreatorFee</Code> calls on your behalf.
-            </li>
-            <li>
-              The <strong>3 staking wallets</strong> — needed to transfer
-              tokens back to senders when their locks expire.
-            </li>
-          </Ol>
           <p>
-            Keys are encrypted at rest (AES-GCM) and only ever decrypted
-            in-memory inside the signing service. No user assets other than
-            staked tokens (and only during their own lock) are touched.
+            pumpr custodies <strong>one</strong> key per launch: the{" "}
+            <Code>dev wallet</Code>, needed to sign pump.fun create-token and{" "}
+            <Code>collectCreatorFee</Code> on your behalf. It&apos;s encrypted
+            at rest (AES-GCM) and decrypted only in the signing service.
+          </p>
+          <p>
+            pumpr does <strong>not</strong> custody any staker funds. Locked
+            tokens live inside a Streamflow PDA on-chain; only the staker can
+            withdraw them, and only after cliff.
           </p>
         </Section>
 
-        <Section id="why-send" title="Why send-to-stake">
+        <Section id="why-streamflow" title="Why Streamflow">
           <p>
-            Most Solana dapps require a wallet extension and an on-chain
-            signature for every action. pumpr stakes by <em>transfer</em>{" "}
-            instead, so:
+            Earlier versions of pumpr used custodial escrow wallets —
+            stakers sent tokens to a pumpr-controlled address and we returned
+            them after the lock. That required trusting pumpr with your tokens.
+            Streamflow removes that trust:
           </p>
           <Ul>
-            <li>No wallet popups, no &quot;connect&quot; prompt.</li>
-            <li>Works from any wallet (including CEX withdrawals).</li>
+            <li>Locks are on-chain PDAs; pumpr has no keys to them.</li>
             <li>
-              Rewards arrive back at the same wallet you sent from — same
-              operational flow as a Solana transfer.
+              The contract flags <Code>cancelableBySender</Code>,{" "}
+              <Code>transferableBySender</Code> are both <Code>false</Code>, so
+              even the staker can&apos;t pull tokens before cliff. This keeps
+              tier multipliers honest.
+            </li>
+            <li>
+              Withdrawals run through Streamflow&apos;s own app, not pumpr. If
+              pumpr disappears, your tokens don&apos;t.
             </li>
           </Ul>
-          <p>
-            The cost of this UX is that pumpr holds the staking wallets
-            temporarily — a model closer to a custodial staking pool than a
-            fully trustless escrow. We&apos;re explicit about this.
-          </p>
         </Section>
 
         <Section id="risks" title="Known risks">
           <Ul>
             <li>
-              <strong>Custodial staking wallets.</strong> If pumpr is
-              compromised, staked tokens are at risk.
+              <strong>pump.fun dependency.</strong> Launches and fees all
+              depend on pump.fun being operational and maintaining the current
+              creator-fee model.
             </li>
             <li>
-              <strong>pump.fun dependency.</strong> pumpr launches and fees
-              all depend on pump.fun being operational and maintaining the
-              current creator-fee model.
+              <strong>Reward payout depends on pumpr.</strong> The actual SOL
+              distribution tick is run by pumpr. Streamflow locks survive
+              independently, but if pumpr is offline, rewards pause.
             </li>
             <li>
-              <strong>RPC dependency.</strong> Holders + bonding curve data
-              require a reliable Solana RPC. Public endpoints rate-limit
-              aggressively.
+              <strong>Dev wallet custody.</strong> pumpr holds the creator
+              keypair; if compromised, creator fees could be redirected.
+            </li>
+            <li>
+              <strong>Streamflow protocol fee.</strong> 0.19% of the locked
+              amount is deducted by Streamflow at lock creation.
             </li>
           </Ul>
         </Section>
 
         <footer className="mt-14 flex items-center justify-between border-t border-[color:var(--border)] pt-6 text-xs text-[color:var(--muted)]">
-          <span>pumpr v1 docs</span>
+          <span>pumpr v2 docs</span>
           <Link
             href="/launch"
             className="font-semibold uppercase tracking-widest text-[color:var(--green)] hover:underline"
@@ -306,7 +335,6 @@ export default function HowItWorksPage() {
         </footer>
       </article>
 
-      {/* RIGHT "ON THIS PAGE" */}
       <aside className="sticky top-20 hidden h-[calc(100vh-6rem)] self-start overflow-y-auto pl-2 text-xs xl:block">
         <div className="mb-3 font-mono text-[10px] font-semibold uppercase tracking-[0.25em] text-[color:var(--muted)]">
           on this page

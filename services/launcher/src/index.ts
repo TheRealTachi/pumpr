@@ -11,12 +11,10 @@ import { openDb, type LaunchRecord } from "./db";
 import { EnvAesKeyVault } from "./keyVault";
 import { startWatcher, runLaunch, type WatcherConfig } from "./watcher";
 import { startIndexer } from "./indexer";
-import { startDepositIndexer } from "./depositIndexer";
-import { startUnlockWorker } from "./unlockWorker";
+import { startStreamflowIndexer } from "./streamflowIndexer";
 import { startDistributionWorker } from "./distributionWorker";
 import { startPumpPortalWs } from "./pumpportalWs";
 import { startHoldersWorker } from "./holdersWorker";
-import { escrowsForMint } from "./escrows";
 
 const env = z
   .object({
@@ -33,7 +31,7 @@ const env = z
     KEY_VAULT_MASTER_KEY_HEX: z.string().length(64),
     DB_PATH: z.string().default("./data/launcher.sqlite"),
     IMAGE_DIR: z.string().default("./data/images"),
-    DISTRIBUTION_INTERVAL_MS: z.string().default("3600000"),
+    DISTRIBUTION_INTERVAL_MS: z.string().default("1800000"),
   })
   .parse(process.env);
 
@@ -60,10 +58,14 @@ const watcherCfg: WatcherConfig = {
 startWatcher(watcherCfg);
 
 startIndexer({ db, connection, pollMs: 30_000 });
-startDepositIndexer({ db, connection, pollMs: 15_000 });
+startStreamflowIndexer({
+  db,
+  connection,
+  rpcUrl: env.SOLANA_RPC_URL,
+  pollMs: 30_000,
+});
 startPumpPortalWs({ db, resubscribeMs: 15_000 });
 startHoldersWorker({ db, connection, intervalMs: 300_000 });
-startUnlockWorker({ db, connection, keyVault, pollMs: 60_000 });
 startDistributionWorker({
   db,
   connection,
@@ -188,11 +190,21 @@ app.get("/api/tokens/:mint", (req, res) => {
   const stats = db
     .prepare(`SELECT * FROM pool_stats WHERE mint = ?`)
     .get(req.params.mint) as PoolStatsRow | undefined;
-  const escrows = escrowsForMint(db, req.params.mint).map((e) => ({
-    tier: e.tier,
-    pubkey: e.pubkey,
-  }));
-  res.json({ ...serialize(row, stats), escrows });
+  res.json(serialize(row, stats));
+});
+
+app.get("/api/tokens/:mint/stakers", (req, res) => {
+  const limit = Math.min(Number(req.query.limit ?? 100), 500);
+  const includeEnded = req.query.all === "1";
+  const rows = db
+    .prepare(
+      `SELECT stream_id, wallet, tier, amount, locked_at, unlocks_at, ended_at, claimed_sol
+       FROM stake_locks
+       WHERE mint = ? ${includeEnded ? "" : "AND ended_at IS NULL"}
+       ORDER BY locked_at DESC LIMIT ?`,
+    )
+    .all(req.params.mint, limit);
+  res.json({ items: rows });
 });
 
 app.get("/api/tokens/:mint/deposits", (req, res) => {
@@ -202,10 +214,10 @@ app.get("/api/tokens/:mint/deposits", (req, res) => {
     return res.status(400).json({ error: "address query required" });
   const rows = db
     .prepare(
-      `SELECT tier, amount, received_at, unlocks_at, returned_at, pending_sol, claimed_sol
-       FROM stake_deposits
-       WHERE mint = ? AND sender_address = ?
-       ORDER BY received_at DESC LIMIT 100`,
+      `SELECT stream_id, tier, amount, locked_at, unlocks_at, ended_at, claimed_sol
+       FROM stake_locks
+       WHERE mint = ? AND wallet = ?
+       ORDER BY locked_at DESC LIMIT 100`,
     )
     .all(req.params.mint, address);
   res.json({ items: rows });

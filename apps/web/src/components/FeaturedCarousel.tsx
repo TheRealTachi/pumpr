@@ -112,8 +112,8 @@ function MiniCard({
   featured?: boolean;
   disabled?: boolean;
 }) {
-  const fees = Number(BigInt(token.lifetimeRewards || "0")) / 1e9;
-  const staked = Number(BigInt(token.totalStaked || "0")) / 1_000_000;
+  const fees = Number(token.lifetimeRewards || "0") / 1e9;
+  const staked = Number(token.totalStaked || "0") / 1_000_000;
   const href = disabled ? "/launch" : `/token/${token.mint}`;
 
   const body = (

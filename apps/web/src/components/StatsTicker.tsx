@@ -42,7 +42,7 @@ export function StatsTicker() {
             <span>
               fees{" "}
               <span className="text-[color:var(--green-soft)]">
-                {(Number(BigInt(i.lifetimeRewards || "0")) / 1e9).toFixed(3)}{" "}
+                {(Number(i.lifetimeRewards || "0") / 1e9).toFixed(3)}{" "}
                 SOL
               </span>
             </span>

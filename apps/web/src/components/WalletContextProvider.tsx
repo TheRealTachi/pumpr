@@ -1,9 +1,34 @@
-// Wallet adapter removed — pumpr uses send-to-stake, no wallet connection
-// needed. This is a no-op passthrough for compatibility with layout.tsx.
+"use client";
+
+import { useMemo } from "react";
+import {
+  ConnectionProvider,
+  WalletProvider,
+} from "@solana/wallet-adapter-react";
+import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
+import {
+  PhantomWalletAdapter,
+  SolflareWalletAdapter,
+} from "@solana/wallet-adapter-wallets";
+import { RPC_URL } from "@/lib/config";
+
+import "@solana/wallet-adapter-react-ui/styles.css";
+
 export function WalletContextProvider({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return <>{children}</>;
+  const wallets = useMemo(
+    () => [new PhantomWalletAdapter(), new SolflareWalletAdapter()],
+    [],
+  );
+
+  return (
+    <ConnectionProvider endpoint={RPC_URL}>
+      <WalletProvider wallets={wallets} autoConnect>
+        <WalletModalProvider>{children}</WalletModalProvider>
+      </WalletProvider>
+    </ConnectionProvider>
+  );
 }

@@ -91,8 +91,8 @@ export function TokenTable() {
           return b.stakePct - a.stakePct;
         case "fees":
           return (
-            Number(BigInt(b.lifetimeRewards || "0")) -
-            Number(BigInt(a.lifetimeRewards || "0"))
+            Number(b.lifetimeRewards || "0") -
+            Number(a.lifetimeRewards || "0")
           );
         default:
           return (

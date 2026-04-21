@@ -5,6 +5,7 @@ import Link from "next/link";
 import { LAUNCHER_API } from "@/lib/config";
 import { PriceChart } from "@/components/PriceChart";
 import { StakePanel } from "@/components/StakePanel";
+import { StakersList } from "@/components/StakersList";
 
 interface Meta {
   name: string;
@@ -17,7 +18,6 @@ interface Meta {
   mint: string;
 }
 interface PoolDetail extends Meta {
-  escrows?: { tier: "1d" | "3d" | "7d"; pubkey: string }[];
   stakePct: number;
   totalStaked: string;
   lifetimeRewards: string;
@@ -134,11 +134,8 @@ export default function TokenPage({
         </div>
 
         <div className="space-y-4 min-w-0">
-          <StakePanel
-            mint={mint}
-            symbol={data?.symbol ?? ""}
-            escrows={data?.escrows ?? []}
-          />
+          <StakePanel mint={mint} symbol={data?.symbol ?? ""} />
+          <StakersList mint={mint} />
           <TopHolders mint={mint} />
         </div>
       </div>
@@ -178,10 +175,19 @@ function HeaderStats({
       />
       <Stat label="HOLDERS" value={data?.holders ? data.holders.toString() : "—"} />
       <Stat
+        label="STAKED"
+        value={
+          data && Number(data.totalStaked) > 0
+            ? `${fmtK(Number(data.totalStaked) / 1_000_000)} (${data.stakePct.toFixed(1)}%)`
+            : "—"
+        }
+        good={data ? Number(data.totalStaked) > 0 : undefined}
+      />
+      <Stat
         label="LIFETIME FEES"
         value={
           data
-            ? `${(Number(BigInt(data.lifetimeRewards || "0")) / 1e9).toFixed(3)} ◎`
+            ? `${(Number(data.lifetimeRewards || "0") / 1e9).toFixed(3)} ◎`
             : "—"
         }
         good={data ? Number(data.lifetimeRewards) > 0 : undefined}
@@ -243,15 +249,6 @@ function ChartHeader({
               ? `${data.priceSol.toPrecision(6)} ◎`
               : "price —"}
         </span>
-        <span>·</span>
-        <span>1m</span>
-        <span>·</span>
-        <span>5m</span>
-        <span className="rounded bg-[color:var(--green)]/10 px-1.5 py-0.5 font-semibold text-[color:var(--green)]">
-          1h
-        </span>
-        <span>·</span>
-        <span>1d</span>
       </div>
       <div className="flex items-center gap-2">
         <div className="text-[10px] uppercase tracking-widest text-[color:var(--muted)]">

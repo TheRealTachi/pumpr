@@ -2,6 +2,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import dynamic from "next/dynamic";
+
+const WalletMultiButton = dynamic(
+  () =>
+    import("@solana/wallet-adapter-react-ui").then(
+      (m) => m.WalletMultiButton,
+    ),
+  { ssr: false },
+);
 
 const NAV_ITEMS = [
   { href: "/", label: "HOME" },
@@ -57,6 +66,7 @@ export function Nav() {
               className="w-80 rounded-lg border border-[color:var(--border)] bg-[color:var(--panel-solid)] py-1.5 pl-8 pr-3 text-xs placeholder:text-[color:var(--muted)] focus:border-[color:var(--green-dim)] focus:outline-none focus:ring-2 focus:ring-[color:var(--green)]/20"
             />
           </div>
+          <WalletMultiButton />
         </div>
       </div>
     </header>

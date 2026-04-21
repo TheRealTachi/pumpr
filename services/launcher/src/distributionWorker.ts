@@ -11,21 +11,21 @@ import type { KeyVault } from "./keyVault";
 import { TIER_MULTIPLIER, type Tier } from "./escrows";
 import { collectCreatorFees, isMainnet } from "./pumpportal";
 
-// Every hour, for each pool:
+// Every `intervalMs` (default 30 min), for each launched pool:
 //   1. If mainnet, call pumpportal collectCreatorFee so SOL lands in the dev
 //      wallet.
 //   2. Pull the dev wallet's current spendable SOL (above gas reserve).
-//   3. Compute each active deposit's weight for THIS window:
-//        weight = amount × tier_mult × fraction_of_hour_active
-//   4. Distribute 90% pro-rata to sender addresses. 10% to protocol_treasury.
-//   5. Update claimed_sol on each deposit.
+//   3. Compute each active lock's weight for THIS window:
+//        weight = amount × tier_mult × (active_ms_in_window / interval_ms)
+//   4. Distribute 90% pro-rata to lock owners. 10% to protocol_treasury.
+//   5. Update claimed_sol on each lock.
 //
-// Deposits in cooldown (returned_at set) also earn for the fraction of the
-// hour they were active before unlock.
+// A lock is "active in the window" if its locked_at < windowEnd AND
+// (ended_at IS NULL OR ended_at >= windowStart). Post-cliff locks still earn
+// until the user actually withdraws and closes the stream on Streamflow.
 
 const PROTOCOL_FEE_BPS = 1_000n; // 10%
 const BPS = 10_000n;
-const HOUR_MS = 60 * 60 * 1000;
 
 interface LaunchRow {
   id: string;
@@ -34,15 +34,15 @@ interface LaunchRow {
   encrypted_privkey: string;
 }
 
-interface DepositRow {
-  id: number;
+interface LockRow {
+  stream_id: string;
   mint: string;
+  wallet: string;
   tier: Tier;
-  sender_address: string;
   amount: string;
-  received_at: number;
+  locked_at: number;
   unlocks_at: number;
-  returned_at: number | null;
+  ended_at: number | null;
 }
 
 export interface DistributionConfig {
@@ -65,7 +65,7 @@ export function startDistributionWorker(
     if (stopped) return;
     try {
       const windowEnd = Date.now();
-      const windowStart = windowEnd - HOUR_MS;
+      const windowStart = windowEnd - cfg.intervalMs;
       const launches = cfg.db
         .prepare(
           `SELECT id, mint_pubkey, dev_wallet_pubkey, encrypted_privkey
@@ -118,53 +118,49 @@ async function distributeForLaunch(
   const available = bal - cfg.gasReserveLamports;
   if (available < 10_000n) return; // skip dust windows
 
-  // Track claimed-fee total on the pool's stats row (for UI display).
   if (l.mint_pubkey) {
+    const cur = cfg.db
+      .prepare(`SELECT lifetime_rewards FROM pool_stats WHERE mint = ?`)
+      .get(l.mint_pubkey) as { lifetime_rewards: string } | undefined;
+    const next =
+      (cur?.lifetime_rewards ? BigInt(cur.lifetime_rewards) : 0n) + available;
     cfg.db
-      .prepare(
-        `UPDATE pool_stats SET lifetime_rewards = CAST(
-           (CAST(COALESCE(lifetime_rewards,'0') AS INTEGER) + ?) AS TEXT
-         ) WHERE mint = ?`,
-      )
-      .run(Number(available), l.mint_pubkey);
+      .prepare(`UPDATE pool_stats SET lifetime_rewards = ? WHERE mint = ?`)
+      .run(next.toString(), l.mint_pubkey);
   }
 
   const protocolCut = (available * PROTOCOL_FEE_BPS) / BPS;
   const stakerCut = available - protocolCut;
 
-  // Active deposits during this window
-  const deposits = cfg.db
+  const locks = cfg.db
     .prepare(
-      `SELECT id, mint, tier, sender_address, amount, received_at, unlocks_at, returned_at
-       FROM stake_deposits
+      `SELECT stream_id, mint, wallet, tier, amount, locked_at, unlocks_at, ended_at
+       FROM stake_locks
        WHERE mint = ?
-         AND received_at < ?
-         AND (returned_at IS NULL OR returned_at >= ?)`,
+         AND locked_at < ?
+         AND (ended_at IS NULL OR ended_at >= ?)`,
     )
-    .all(l.mint_pubkey, windowEnd, windowStart) as DepositRow[];
+    .all(l.mint_pubkey, windowEnd, windowStart) as LockRow[];
 
-  if (deposits.length === 0) return;
+  if (locks.length === 0) return;
 
-  // Weight = amount × tier_mult × (active_ms_in_window / HOUR_MS)
+  const windowMs = windowEnd - windowStart;
   let totalWeight = 0;
-  const weights: { dep: DepositRow; weight: number }[] = [];
-  for (const d of deposits) {
-    const activeStart = Math.max(d.received_at, windowStart);
-    const activeEnd = Math.min(d.returned_at ?? windowEnd, windowEnd);
+  const weights: { lock: LockRow; weight: number }[] = [];
+  for (const lk of locks) {
+    const activeStart = Math.max(lk.locked_at, windowStart);
+    const activeEnd = Math.min(lk.ended_at ?? windowEnd, windowEnd);
     const activeMs = Math.max(0, activeEnd - activeStart);
     if (activeMs === 0) continue;
     const w =
-      (Number(BigInt(d.amount)) / 1_000_000) *
-      TIER_MULTIPLIER[d.tier] *
-      (activeMs / HOUR_MS);
-    weights.push({ dep: d, weight: w });
+      (Number(BigInt(lk.amount)) / 1_000_000) *
+      TIER_MULTIPLIER[lk.tier] *
+      (activeMs / windowMs);
+    weights.push({ lock: lk, weight: w });
     totalWeight += w;
   }
   if (totalWeight <= 0) return;
 
-  // Build a single tx that pays protocol + each staker. Solana tx limit is
-  // ~1232 bytes; a system_program::transfer ix is ~12 bytes + 32×3 pubkeys =
-  // ~108 bytes. In practice ~10 transfers per tx is safe. Batch accordingly.
   const payouts: { to: PublicKey; lamports: bigint }[] = [
     { to: cfg.protocolTreasury, lamports: protocolCut },
   ];
@@ -178,14 +174,17 @@ async function distributeForLaunch(
         BigInt(Math.floor(totalWeight * 1e6));
     if (share <= 0n) continue;
     payouts.push({
-      to: new PublicKey(weights[i].dep.sender_address),
+      to: new PublicKey(weights[i].lock.wallet),
       lamports: share,
     });
+    const curClaim = cfg.db
+      .prepare(`SELECT claimed_sol FROM stake_locks WHERE stream_id = ?`)
+      .get(weights[i].lock.stream_id) as { claimed_sol: string } | undefined;
+    const nextClaim =
+      (curClaim?.claimed_sol ? BigInt(curClaim.claimed_sol) : 0n) + share;
     cfg.db
-      .prepare(
-        `UPDATE stake_deposits SET claimed_sol = CAST(CAST(claimed_sol AS INTEGER) + ? AS TEXT) WHERE id = ?`,
-      )
-      .run(Number(share), weights[i].dep.id);
+      .prepare(`UPDATE stake_locks SET claimed_sol = ? WHERE stream_id = ?`)
+      .run(nextClaim.toString(), weights[i].lock.stream_id);
     distributed += share;
   }
 

@@ -9,7 +9,7 @@ import { getMintTokenProgram } from "./tokenProgram";
 
 // Pool stats indexer. For every launched token we:
 //   1. Pull its pump.fun bonding curve account (price, MC, graduation %).
-//   2. Sum our stake_deposits table to derive total-staked for this mint.
+//   2. Sum our stake_locks table to derive total-staked for this mint.
 //   3. Read mint supply for stake %.
 //   4. Count unique holders from the token's largest accounts (top 20).
 
@@ -74,7 +74,7 @@ export function startIndexer(cfg: IndexerConfig): () => void {
                 cfg.db
                   .prepare(
                     `SELECT COALESCE(SUM(CAST(amount AS INTEGER)),0) AS total
-                     FROM stake_deposits WHERE mint = ? AND returned_at IS NULL`,
+                     FROM stake_locks WHERE mint = ? AND ended_at IS NULL`,
                   )
                   .get(r.mint) as { total: number },
               ),

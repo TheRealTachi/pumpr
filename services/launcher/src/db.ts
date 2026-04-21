@@ -170,6 +170,36 @@ export function openDb(dbPath: string): Database.Database {
       updated_at INTEGER NOT NULL,
       PRIMARY KEY (mint, rank)
     );
+
+    /* Pre-ground vanity mint keypairs. Populated by the grindPool script,
+       consumed by the launcher on each launch so we don't grind inline. */
+    CREATE TABLE IF NOT EXISTS vanity_mints (
+      pubkey TEXT PRIMARY KEY,
+      encrypted_privkey TEXT NOT NULL,
+      used_at INTEGER,
+      created_at INTEGER NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_vanity_unused ON vanity_mints(used_at)
+      WHERE used_at IS NULL;
+
+    /* Streamflow-backed locks. One row per on-chain stream contract where
+       the recipient == sender (self-lock). Indexed by mint from chain. */
+    CREATE TABLE IF NOT EXISTS stake_locks (
+      stream_id TEXT PRIMARY KEY,           /* Streamflow metadata account pubkey */
+      mint TEXT NOT NULL,
+      wallet TEXT NOT NULL,                 /* owner of the locked tokens (sender == recipient) */
+      tier TEXT NOT NULL,                   /* '1d' | '3d' | '7d' */
+      amount TEXT NOT NULL,                 /* raw token amount (base units) */
+      locked_at INTEGER NOT NULL,           /* unix ms — stream start */
+      unlocks_at INTEGER NOT NULL,          /* unix ms — cliff */
+      ended_at INTEGER,                     /* unix ms — withdrawn/closed (null while active or cliff not reached) */
+      pending_sol TEXT NOT NULL DEFAULT '0',
+      claimed_sol TEXT NOT NULL DEFAULT '0',
+      first_seen_at INTEGER NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_locks_mint ON stake_locks(mint);
+    CREATE INDEX IF NOT EXISTS idx_locks_wallet ON stake_locks(wallet);
+    CREATE INDEX IF NOT EXISTS idx_locks_mint_active ON stake_locks(mint, ended_at);
   `);
   migrate();
   return db;
