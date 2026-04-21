@@ -103,20 +103,44 @@ export async function fetchBondingCurve(
   };
 }
 
-// Cached SOL/USD rate via CoinGecko — refreshed every 60s.
+// Cached SOL/USD rate — refreshed every 60s. Primary source is Jupiter's
+// price API (works reliably from any datacenter); CoinGecko is the fallback
+// since it rate-limits/geo-blocks some Railway egress IPs and returns 0.
 let solUsdCache = { price: 0, ts: 0 };
+
+async function fetchJupiterSolUsd(): Promise<number> {
+  const res = await fetch(
+    "https://api.jup.ag/price/v2?ids=So11111111111111111111111111111111111111112",
+  );
+  const j = (await res.json()) as {
+    data?: Record<string, { price?: string | number } | undefined>;
+  };
+  const raw = j?.data?.["So11111111111111111111111111111111111111112"]?.price;
+  const n = typeof raw === "string" ? Number(raw) : (raw ?? 0);
+  return Number.isFinite(n) ? n : 0;
+}
+
+async function fetchCoinGeckoSolUsd(): Promise<number> {
+  const res = await fetch(
+    "https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd",
+  );
+  const j = (await res.json()) as { solana?: { usd?: number } };
+  return j?.solana?.usd ?? 0;
+}
+
 export async function getSolUsd(): Promise<number> {
   const fresh = Date.now() - solUsdCache.ts < 60_000;
   if (fresh && solUsdCache.price > 0) return solUsdCache.price;
-  try {
-    const res = await fetch(
-      "https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd",
-    );
-    const j = (await res.json()) as { solana?: { usd?: number } };
-    const price = j?.solana?.usd ?? 0;
-    if (price > 0) solUsdCache = { price, ts: Date.now() };
-    return price;
-  } catch {
-    return solUsdCache.price;
+  for (const source of [fetchJupiterSolUsd, fetchCoinGeckoSolUsd]) {
+    try {
+      const price = await source();
+      if (price > 0) {
+        solUsdCache = { price, ts: Date.now() };
+        return price;
+      }
+    } catch {
+      /* try next source */
+    }
   }
+  return solUsdCache.price;
 }
