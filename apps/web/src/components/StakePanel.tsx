@@ -195,7 +195,7 @@ export function StakePanel({ mint, symbol }: { mint: string; symbol: string }) {
       <p className="mt-1 text-[11px] leading-relaxed text-[color:var(--muted)]">
         locks ${symbol || "TOKEN"} non-custodially via streamflow. your tokens
         return to your wallet when the cliff hits — no one can move them early.
-        every 30 minutes, 90% of pump.fun creator fees go pro-rata to active
+        every 15 minutes, 90% of pump.fun creator fees go pro-rata to active
         locks, weighted by amount × tier.
       </p>
 
@@ -297,7 +297,7 @@ export function StakePanel({ mint, symbol }: { mint: string; symbol: string }) {
         <span className="font-bold text-[color:var(--green)]">how:</span> your
         wallet signs a streamflow contract locking ${symbol || "TOKEN"} to
         yourself until the cliff. pumpr indexes your lock and pays SOL rewards
-        every 30 minutes. streamflow takes 0.19% protocol fee. withdraw on
+        every 15 minutes. streamflow takes 0.19% protocol fee. withdraw on
         streamflow after the cliff to end earning.
       </div>
 

@@ -104,7 +104,7 @@ export default function HowItWorksPage() {
           <p className="mt-3 max-w-2xl text-sm text-[color:var(--muted)]">
             pumpr is a pump.fun launchpad with Proof-of-Belief staking. Every
             token launched streams creator fees back to its stakers — paid
-            directly, every 30 minutes.
+            directly, every 15 minutes.
           </p>
         </header>
 
@@ -115,11 +115,12 @@ export default function HowItWorksPage() {
             <strong>Streamflow</strong> — pumpr doesn&apos;t hold staked
             tokens, doesn&apos;t gate withdrawals, and can&apos;t move them.
             pumpr indexes the Streamflow program and pays each staker&apos;s
-            wallet a pro-rata slice of pump.fun creator fees in SOL.
+            wallet a pro-rata slice of pump.fun creator fees in SOL every
+            15 minutes.
           </p>
           <Callout variant="info">
             <strong>tl;dr</strong> — launch a token, stakers lock on Streamflow
-            from their own wallet, pumpr auto-pays SOL rewards every 30
+            from their own wallet, pumpr auto-pays SOL rewards every 15
             minutes. Tokens return at cliff via Streamflow.
           </Callout>
         </Section>
@@ -221,7 +222,7 @@ export default function HowItWorksPage() {
         </Section>
 
         <Section id="rewards" title="Earning rewards">
-          <p>Every 30 minutes pumpr runs a distribution job for each token:</p>
+          <p>Every 15 minutes pumpr runs a distribution job for each token:</p>
           <Ol>
             <li>
               Calls <Code>collectCreatorFee</Code> via pumpportal so accumulated
@@ -242,7 +243,7 @@ export default function HowItWorksPage() {
           </Ol>
           <Callout variant="good">
             Rewards land in the wallet that created the lock, automatically,
-            every 30 minutes. Check your <Code>+X.XXXX ◎</Code> in the stakers
+            every 15 minutes. Check your <Code>+X.XXXX ◎</Code> in the stakers
             list on the token page.
           </Callout>
         </Section>

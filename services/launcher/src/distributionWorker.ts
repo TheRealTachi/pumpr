@@ -11,7 +11,7 @@ import type { KeyVault } from "./keyVault";
 import { TIER_MULTIPLIER, type Tier } from "./escrows";
 import { collectCreatorFees, isMainnet } from "./pumpportal";
 
-// Every `intervalMs` (default 30 min), for each launched pool:
+// Every `intervalMs` (default 15 min), for each launched pool:
 //   1. If mainnet, call pumpportal collectCreatorFee so SOL lands in the dev
 //      wallet.
 //   2. Pull the dev wallet's current spendable SOL (above gas reserve).

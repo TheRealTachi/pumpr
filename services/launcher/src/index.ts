@@ -31,7 +31,7 @@ const env = z
     KEY_VAULT_MASTER_KEY_HEX: z.string().length(64),
     DB_PATH: z.string().default("./data/launcher.sqlite"),
     IMAGE_DIR: z.string().default("./data/images"),
-    DISTRIBUTION_INTERVAL_MS: z.string().default("1800000"),
+    DISTRIBUTION_INTERVAL_MS: z.string().default("900000"),
   })
   .parse(process.env);
 
