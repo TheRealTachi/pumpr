@@ -16,7 +16,7 @@ export default function LandingPage() {
               PROOF OF BELIEF · LIVE ON MAINNET
             </span>
           </div>
-          <h1 className="heavy heavy-split mx-auto max-w-4xl text-balance text-5xl leading-[0.95] sm:text-6xl md:text-7xl">
+          <h1 className="heavy heavy-split mx-auto max-w-3xl text-balance text-3xl leading-[0.95] sm:text-4xl md:text-5xl">
             <span className="tone-a">WHERE HOLDERS</span>{" "}
             <span className="tone-b">WIN</span>
           </h1>
