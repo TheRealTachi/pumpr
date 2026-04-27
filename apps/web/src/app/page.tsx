@@ -17,13 +17,16 @@ export default function LandingPage() {
           loop
           playsInline
           preload="auto"
+          style={{ filter: "blur(3px) brightness(0.55) saturate(1.05)" }}
         />
-        <div className="absolute inset-0 bg-[rgba(6,8,7,0.55)]" />
+        {/* Strong dark wash so the video reads as atmosphere, not foreground */}
+        <div className="absolute inset-0 bg-[rgba(6,8,7,0.78)]" />
+        {/* Subtle green/vignette grading on top */}
         <div
           className="absolute inset-0"
           style={{
             background:
-              "radial-gradient(ellipse 120% 80% at 50% 10%, rgba(6,8,7,0.25), rgba(6,8,7,0.85) 80%)",
+              "radial-gradient(ellipse 90% 60% at 50% 0%, rgba(61,218,78,0.08), transparent 60%), radial-gradient(ellipse 120% 80% at 50% 110%, rgba(6,8,7,0.95), transparent 70%)",
           }}
         />
       </div>
