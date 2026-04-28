@@ -29,8 +29,12 @@ const env = z
   })
   .parse(process.env);
 
-const RENT_BUFFER_LAMPORTS = 10_000n; // ~0.00001 SOL — leaves room for tx fee
-const MIN_SWEEP_LAMPORTS = 15_000n;
+// Drain the wallet to zero: send (balance - tx fee). Leaving any non-zero
+// remainder below rent-exempt minimum (~890K lamports) makes the runtime
+// reject the tx with InsufficientFundsForRent. Sending exactly balance - fee
+// closes the system account at 0 lamports cleanly.
+const TX_FEE_LAMPORTS = 5_000n;
+const MIN_SWEEP_LAMPORTS = 10_000n;
 
 interface LaunchRow {
   id: string;
@@ -91,15 +95,11 @@ async function main() {
       }
 
       const bal = BigInt(await connection.getBalance(kp.publicKey));
-      if (bal <= RENT_BUFFER_LAMPORTS + 5_000n) {
+      if (bal < MIN_SWEEP_LAMPORTS) {
         console.log(`[sweep] ${tag}  bal=${bal} lamports — skipping (dust)`);
         continue;
       }
-      const send = bal - RENT_BUFFER_LAMPORTS;
-      if (send < MIN_SWEEP_LAMPORTS) {
-        console.log(`[sweep] ${tag}  bal=${bal} send=${send} — skipping`);
-        continue;
-      }
+      const send = bal - TX_FEE_LAMPORTS;
 
       if (dryRun) {
         console.log(
